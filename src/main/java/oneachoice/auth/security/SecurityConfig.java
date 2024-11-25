@@ -1,7 +1,9 @@
 package oneachoice.auth.security;
 
 import lombok.RequiredArgsConstructor;
+import oneachoice.auth.security.filter.JwtFilter;
 import oneachoice.auth.security.filter.LoginFilter;
+import oneachoice.auth.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +21,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
+
+    private final JwtUtil jwtUtil;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -40,7 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(config -> config
                         .requestMatchers("/login", "/join").permitAll()
                         //테스트용 임시 경로
-                        .requestMatchers("/hello").permitAll()
+                        .requestMatchers("/hello").hasRole("USER")
                         .anyRequest().authenticated()
                 );
 
@@ -53,7 +57,13 @@ public class SecurityConfig {
         http
                 // FormLogin에서 UsernamePasswordAuthenticationFilter가 Disabled됨
                 // UsernamePasswordAuthenticationFilter를 상속한 LoginFilter를 그 자리에 넣어줌
-                .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(
+                        new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
+                        UsernamePasswordAuthenticationFilter.class);
+
+        http
+                // JWT 인증 필터 추가, 로그인 필터 전에 검증해서 인증해줌
+                .addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
 
 
         return http.build();

@@ -1,3 +1,6 @@
 spring:
   application:
     name: auth
+temp:
+  jwt:
+    secret: VGhpcyBpcyBhIHRlbXBvcmFyeSBzZWNyZXQgcGFzc3dvcmQ

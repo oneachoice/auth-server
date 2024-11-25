@@ -14,6 +14,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -23,6 +25,8 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
 
     private final JwtUtil jwtUtil;
+
+    private final CustomCorsConfigurationSource customCorsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -65,6 +69,11 @@ public class SecurityConfig {
                 // JWT 인증 필터 추가, 로그인 필터 전에 검증해서 인증해줌
                 .addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
 
+        http
+                // CORS 정책 설정
+                .cors(config -> config
+                        .configurationSource(customCorsConfigurationSource));
+
 
         return http.build();
     }
@@ -78,4 +87,5 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
+
 }

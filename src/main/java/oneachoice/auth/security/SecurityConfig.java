@@ -14,19 +14,19 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        
+
         http
                 // CSRF 방지 기능 사용 안함, JWT 방식이라 필요없음
                 .csrf(config -> config.disable());
-        
+
         http
                 // Form 로그인 사용 안함
                 .formLogin(config -> config.disable());
-        
+
         http
                 // Http Basic 사용 안함
                 .httpBasic(config -> config.disable());
-        
+
         http
                 // 경로 인가 매핑
                 .authorizeHttpRequests(config -> config
@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .requestMatchers("/hello").permitAll()
                         .anyRequest().authenticated()
                 );
-        
+
         http
                 // 세션 상태는 STATELESS하게 유지, JWT 방식 사용
                 .sessionManagement(config -> config
@@ -44,5 +44,10 @@ public class SecurityConfig {
 
 
         return http.build();
+    }
+
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

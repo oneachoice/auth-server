@@ -4,8 +4,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import oneachoice.auth.security.CustomUserDetails;
+import oneachoice.auth.service.RefreshTokenCahcingService;
 import oneachoice.auth.util.CookieUtil;
 import oneachoice.auth.util.JwtUtil;
 import org.springframework.http.HttpStatus;
@@ -20,14 +22,19 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 
+@Builder
 @RequiredArgsConstructor
-public class LoginFilter extends UsernamePasswordAuthenticationFilter {
+public class CustomLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final JwtUtil jwtUtil;
 
     private final CookieUtil cookieUtil;
 
     private final AuthenticationManager authenticationManager;
+
+    private final RefreshTokenCahcingService refreshTokenCahcingService;
+
+    private final long refreshTTL;
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
@@ -64,9 +71,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         // refresh 토큰 생성
         String refreshToken = jwtUtil.createJwt("refresh", email, role);
 
+        // refresh 토큰 캐싱
+        refreshTokenCahcingService.add(email, role, refreshToken);
+
         // 응답 설정
         response.setHeader("access", accessToken);
-        response.addCookie(cookieUtil.createCookie("refresh", refreshToken));
+        response.addCookie(cookieUtil.createCookie("refresh", refreshToken, refreshTTL));
         response.setStatus(HttpStatus.OK.value());
     }
 

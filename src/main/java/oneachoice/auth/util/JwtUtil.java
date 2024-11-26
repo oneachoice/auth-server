@@ -63,8 +63,8 @@ public class JwtUtil {
     public String createJwt(String category, String email, String role) throws MalformedJwtException{
 
         long expirationMs = switch (category) {
-            case "refresh" -> accessTTL;
-            case "access" -> refreshTTL;
+            case "refresh" -> refreshTTL;
+            case "access" -> accessTTL;
             default -> throw new MalformedJwtException("Invalid token category");
         };
 

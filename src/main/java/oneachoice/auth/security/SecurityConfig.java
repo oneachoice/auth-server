@@ -1,10 +1,13 @@
 package oneachoice.auth.security;
 
 import lombok.RequiredArgsConstructor;
+import oneachoice.auth.security.filter.CustomLogoutFilter;
 import oneachoice.auth.security.filter.JwtFilter;
-import oneachoice.auth.security.filter.LoginFilter;
+import oneachoice.auth.security.filter.CustomLoginFilter;
+import oneachoice.auth.service.RefreshTokenCahcingService;
 import oneachoice.auth.util.CookieUtil;
 import oneachoice.auth.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +18,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -28,6 +32,11 @@ public class SecurityConfig {
     private final JwtUtil jwtUtil;
 
     private final CookieUtil cookieUtil;
+
+    private final RefreshTokenCahcingService refreshTokenCahcingService;
+
+    @Value("${jwt.ttl.refresh}")
+    private long refreshTTL;
 
 
     @Bean
@@ -58,11 +67,20 @@ public class SecurityConfig {
         http
                 // FormLogin에서 UsernamePasswordAuthenticationFilter가 Disabled됨
                 // UsernamePasswordAuthenticationFilter를 상속한 LoginFilter를 그 자리에 넣어줌
-                .addFilterAt(new LoginFilter(jwtUtil, cookieUtil , authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(CustomLoginFilter.builder()
+                        .jwtUtil(jwtUtil)
+                        .cookieUtil(cookieUtil)
+                        .authenticationManager(authenticationManager(authenticationConfiguration))
+                        .refreshTokenCahcingService(refreshTokenCahcingService)
+                        .refreshTTL(refreshTTL)
+                        .build(), UsernamePasswordAuthenticationFilter.class);
 
         http
                 // JWT 인증 필터 추가, 로그인 필터 전에 검증해서 인증해줌
-                .addFilterBefore(new JwtFilter(jwtUtil), LoginFilter.class);
+                .addFilterBefore(new JwtFilter(jwtUtil), CustomLoginFilter.class);
+
+        http
+                .addFilterBefore(new CustomLogoutFilter(jwtUtil, refreshTokenCahcingService), LogoutFilter.class);
 
         http
                 // CORS 정책 설정

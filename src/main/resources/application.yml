@@ -4,3 +4,7 @@ spring:
 temp:
   jwt:
     secret: VGhpcyBpcyBhIHRlbXBvcmFyeSBzZWNyZXQgcGFzc3dvcmQ
+jwt:
+  ttl:
+    access: 900000 # 15M
+    refresh: 3600000 # 1Day

@@ -3,6 +3,7 @@ package oneachoice.auth.security;
 import lombok.RequiredArgsConstructor;
 import oneachoice.auth.security.filter.JwtFilter;
 import oneachoice.auth.security.filter.LoginFilter;
+import oneachoice.auth.util.CookieUtil;
 import oneachoice.auth.util.JwtUtil;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +15,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -24,9 +23,12 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
 
+    private final CustomCorsConfigurationSource customCorsConfigurationSource;
+
     private final JwtUtil jwtUtil;
 
-    private final CustomCorsConfigurationSource customCorsConfigurationSource;
+    private final CookieUtil cookieUtil;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,25 +47,18 @@ public class SecurityConfig {
 
         http
                 // 경로 인가 매핑
-                .authorizeHttpRequests(config -> config
-                        .requestMatchers("/login", "/join").permitAll()
+                .authorizeHttpRequests(config -> config.requestMatchers("/login", "/join", "/reissue").permitAll()
                         //테스트용 임시 경로
-                        .requestMatchers("/hello").hasRole("USER")
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers("/hello").hasRole("USER").anyRequest().authenticated());
 
         http
                 // 세션 상태는 STATELESS하게 유지, JWT 방식 사용
-                .sessionManagement(config -> config
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http
                 // FormLogin에서 UsernamePasswordAuthenticationFilter가 Disabled됨
                 // UsernamePasswordAuthenticationFilter를 상속한 LoginFilter를 그 자리에 넣어줌
-                .addFilterAt(
-                        new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(new LoginFilter(jwtUtil, cookieUtil , authenticationManager(authenticationConfiguration)), UsernamePasswordAuthenticationFilter.class);
 
         http
                 // JWT 인증 필터 추가, 로그인 필터 전에 검증해서 인증해줌
@@ -71,8 +66,7 @@ public class SecurityConfig {
 
         http
                 // CORS 정책 설정
-                .cors(config -> config
-                        .configurationSource(customCorsConfigurationSource));
+                .cors(config -> config.configurationSource(customCorsConfigurationSource));
 
 
         return http.build();
@@ -84,8 +78,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
         return authenticationConfiguration.getAuthenticationManager();
     }
-
 }

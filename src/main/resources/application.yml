@@ -12,3 +12,6 @@ jwt:
   ttl:
     access: 900000 # 15M
     refresh: 3600000 # 1Day
+security:
+  cors:
+    web-host-url: http://localhost:3000

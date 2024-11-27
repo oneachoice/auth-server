@@ -56,9 +56,10 @@ public class SecurityConfig {
 
         http
                 // 경로 인가 매핑
-                .authorizeHttpRequests(config -> config.requestMatchers("/login", "/join", "/reissue").permitAll()
+                .authorizeHttpRequests(config -> config
+                        .requestMatchers("/login", "/join", "/reissue").permitAll()
                         //테스트용 임시 경로
-                        .requestMatchers("/hello").hasRole("USER").anyRequest().authenticated());
+                        .anyRequest().authenticated());
 
         http
                 // 세션 상태는 STATELESS하게 유지, JWT 방식 사용

@@ -2,6 +2,7 @@ package oneachoice.auth.advice;
 
 import jakarta.persistence.PersistenceException;
 import lombok.extern.log4j.Log4j2;
+import oneachoice.auth.dto.response.MessageDTO;
 import oneachoice.auth.exception.TokenException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,9 +28,10 @@ public class GlobalAdvice {
 
     @ExceptionHandler(TokenException.class)
     public ResponseEntity<?> handleTokenException(TokenException ex) {
-
         log.info(ex.toString());
 
-        return ResponseEntity.status(ex.getHttpStatus()).body(ex.getMessage());
+        MessageDTO messageDTO = new MessageDTO(ex.getMessage());
+
+        return ResponseEntity.status(ex.getHttpStatus()).body(messageDTO);
     }
 }

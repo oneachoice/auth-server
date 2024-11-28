@@ -19,6 +19,7 @@ public class ReissueController {
 
     @PostMapping("/reissue")
     public ResponseEntity<MessageDTO> reissue(HttpServletRequest request, HttpServletResponse response) {
+
         reissueService.reissue(request, response);
 
         return ResponseEntity.ok(new MessageDTO("Tokens reissued"));

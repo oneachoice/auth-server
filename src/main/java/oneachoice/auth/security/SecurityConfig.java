@@ -10,6 +10,7 @@ import oneachoice.auth.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -57,13 +58,13 @@ public class SecurityConfig {
         http
                 // 경로 인가 매핑
                 .authorizeHttpRequests(config -> config
-                        .requestMatchers("/login", "/join", "/reissue").permitAll()
-                        //테스트용 임시 경로
+                        .requestMatchers(HttpMethod.POST, "/join", "/login", "/reissue").permitAll()
                         .anyRequest().authenticated());
 
         http
                 // 세션 상태는 STATELESS하게 유지, JWT 방식 사용
-                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                .sessionManagement(config -> config
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         http
                 // FormLogin에서 UsernamePasswordAuthenticationFilter가 Disabled됨
